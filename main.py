@@ -33,6 +33,10 @@ class MainWindow(QMainWindow):
         self.latest = QLabel(f"${latest_close:.2f}")
         self.latest.setFont(QFont("Arial", 40))
         
+        self.ticker_selector = QComboBox()
+        self.ticker_selector.addItems(["Apple", "NVIDIA", "Microsoft", "Google", "Amazon", "Tesla", "Meta"])
+        self.ticker_selector.currentTextChanged.connect(self.select_ticker)
+        
         self.chart = pg.PlotWidget()
         self.chart.plot(date, price)
         self.chart.setFixedWidth(1050)
@@ -42,9 +46,40 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.main_widget)
         
         self.layout.addWidget(self.sidebar)
-        self.sidebar_layout.addWidget(self.signal, alignment = Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
-        self.sidebar_layout.addWidget(self.latest, alignment = Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
+        self.sidebar_layout.addWidget(self.signal, alignment = Qt.AlignmentFlag.AlignHCenter)
+        self.sidebar_layout.addWidget(self.ticker_selector, alignment = Qt.AlignmentFlag.AlignHCenter)
+        self.sidebar_layout.addWidget(self.latest, alignment = Qt.AlignmentFlag.AlignHCenter)
         self.layout.addWidget(self.chart)
+        
+    def select_ticker(self):
+
+        temp = self.ticker_selector.currentText()
+
+        if temp == "Apple":
+            signal = yf.Ticker("AAPL")
+        elif temp == "NVIDIA":
+            signal = yf.Ticker("NVDA")
+        elif temp == "Microsoft":
+            signal = yf.Ticker("MSFT")
+        elif temp == "Google":
+            signal = yf.Ticker("GOOGL")
+        elif temp == "Amazon":
+            signal = yf.Ticker("AMZN")
+        elif temp == "Tesla":
+            signal = yf.Ticker("TSLA")
+        elif temp == "Meta":
+            signal = yf.Ticker("META")
+            
+        data = signal.history(period = "1mo", interval = "1h")
+        price = data["Close"].to_numpy()
+        date = data.index.asi8 / 1e9
+        latest_close = data["Close"].dropna().iloc[-1]
+        
+        self.chart.clear()
+        self.chart.plot(date, price)
+        
+        self.signal.setText(temp)
+        self.latest.setText(f"${latest_close:.2f}")
         
 def main():
     
